@@ -76,12 +76,12 @@ class DiskEngine(Engine):
             self._file_attrs[itrn(collection)]['loc_idx'][itrn(doc_id)] = pos
 
     def doc_exists(self, collection, doc_id):
-        if str(doc_id) in self._get_file_attrs(collection):
+        if self.hash_id(doc_id) in self._get_file_attrs(collection):
             return True
         return False
 
     def get_doc(self, collection, doc_id):
-        doc_id = str(doc_id)
+        doc_id = self.hash_id(doc_id)
         try:
             return self._cache[itrn(collection)][itrn(doc_id)]
         except KeyError:
@@ -98,7 +98,7 @@ class DiskEngine(Engine):
         return doc
 
     def put_doc(self, collection, doc, no_overwrite=False):
-        doc_id = str(doc['_id'])
+        doc_id = self.hash_id(doc['_id'])
         if no_overwrite and self.doc_exists(collection, doc_id):
             return False
         self._cache[itrn(collection)][itrn(doc_id)] = doc
@@ -128,7 +128,7 @@ class DiskEngine(Engine):
         return True
 
     def delete_doc(self, collection, doc_id):
-        doc_id = str(doc_id)
+        doc_id = self.hash_id(doc_id)
         pos = self._get_file_attrs(collection)[doc_id]
         fh = self._get_coll_fh(collection)
         fh.seek(pos)
@@ -191,7 +191,7 @@ class DiskEngine(Engine):
                 doc = _cache_collection[itrn(doc_id)]
                 encoded_docs[doc_id] = bson.encode(doc)
             except KeyError:
-                pos = self._get_file_attrs(collection)[str(doc_id)]
+                pos = self._get_file_attrs(collection)[self.hash_id(doc_id)]
                 fh = self._get_coll_fh(collection)
                 fh.seek(pos)
                 doc_len_bytes = fh.read(4)
